@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <input type="file" id="imageInput">
+    <button onclick="uploadImage()">Upload</button>
+
+    <h2>Image Gallery</h2>
+    <div id="imageGallery"></div>
+
+    <script>
+        async function uploadImage() {
+            const fileInput = document.getElementById("imageInput").files[0];
+            if (!fileInput) return alert("Please select an image");
+
+            const formData = new FormData();
+            formData.append("image", fileInput);
+
+            const response = await fetch("http://localhost:5000/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (response.ok) {
+                alert("Image uploaded!");
+                loadImages();
+            }
+        }
+
+        async function loadImages() {
+            const response = await fetch("http://localhost:5000/images");
+            const images = await response.json();
+
+            const gallery = document.getElementById("imageGallery");
+            gallery.innerHTML = "";
+
+            images.forEach((img) => {
+                const imgElement = document.createElement("img");
+                imgElement.src = "http://localhost:5000" + img.path;
+                imgElement.width = 200;
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "Delete";
+                deleteBtn.onclick = () => deleteImage(img._id);
+
+                gallery.appendChild(imgElement);
+                gallery.appendChild(deleteBtn);
+            });
+        }
+
+        async function deleteImage(id) {
+            if (!confirm("Are you sure?")) return;
+
+            await fetch(`http://localhost:5000/delete/${id}`, { method: "DELETE" });
+            alert("Image deleted!");
+            loadImages();
+        }
+
+        loadImages();
+    </script>
+</body>
+</html>
